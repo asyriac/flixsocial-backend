@@ -43,11 +43,46 @@ const registerUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
+  console.log("Here");
   const { username, password } = req.body;
   const user = await User.findOne({ username });
-  const isAuthenticated = await compare(user.password, password);
+  console.log(user);
+  const isAuthenticated = await compare(password, user.password);
+  console.log(isAuthenticated);
+  if (isAuthenticated) {
+    setTokenToCookie(user.id, res);
+    user.password = undefined;
+    return res.json({
+      result: user,
+    });
+  }
+  return res.json({
+    message: "Invalid username or password",
+  });
+};
+
+const protectedRoute = (req, res, next) => {
+  const accessToken = req.cookies.accessToken;
+  if (accessToken) {
+    jwt.verify(accessToken, process.env.JWT_SECRET, (err, decodedToken) => {
+      if (err) {
+        return res.json({ message: "Unauthroized" });
+      }
+      next();
+    });
+  } else return res.json({ message: "Unauthorized" });
+};
+
+const logoutUser = (req, res) => {
+  res.clearCookie("accessToken");
+  return res.json({
+    message: "Logged out successfully",
+  });
 };
 
 module.exports = {
   registerUser,
+  loginUser,
+  protectedRoute,
+  logoutUser,
 };
