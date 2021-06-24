@@ -21,7 +21,12 @@ const initDB = require("./db");
 initDB();
 
 // Routes setup
-const routes = require("./routes/v1.routes");
+const routes = require("./routes/v1.route");
 app.use("/api/v1", routes);
+
+// Handle unhandled routes
+app.all("*", (req, res) =>
+  res.status(404).json({ message: `${req.originalUrl} not found` })
+);
 
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));

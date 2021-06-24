@@ -68,6 +68,7 @@ const protectedRoute = (req, res, next) => {
       if (err) {
         return res.json({ message: "Unauthroized" });
       }
+      req.decodedToken = decodedToken;
       next();
     });
   } else return res.json({ message: "Unauthorized" });
