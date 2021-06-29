@@ -1,13 +1,11 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const session = require("express-session");
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// cors setup
-app.use(cors());
 
 // body parser setup
 app.use(express.json());
@@ -15,6 +13,15 @@ app.use(express.urlencoded({ extended: true }));
 
 // cookie parser setup
 app.use(cookieParser());
+
+// cors setup
+app.use(
+  cors({
+    credentials: true,
+    origin: ["https://vigilant-murdock-1d421d.netlify.app"],    
+	  optionsSuccessStatus: 200,
+  })
+);
 
 // DB setup
 const initDB = require("./db");

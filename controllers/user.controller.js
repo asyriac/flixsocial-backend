@@ -13,6 +13,8 @@ const setTokenToCookie = (id, res) => {
   res.cookie("accessToken", token, {
     httpOnly: true,
     maxAge: maxAge * 1000,
+    sameSite: "none",
+    secure: true,
   });
 };
 
@@ -45,6 +47,7 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   console.log("Here");
   const { username, password } = req.body;
+  console.log(username, password);
   const user = await User.findOne({ username });
   console.log(user);
   const isAuthenticated = await compare(password, user.password);
@@ -66,12 +69,12 @@ const protectedRoute = (req, res, next) => {
   if (accessToken) {
     jwt.verify(accessToken, process.env.JWT_SECRET, (err, decodedToken) => {
       if (err) {
-        return res.json({ message: "Unauthroized" });
+        return res.status(400).json({ message: "Unauthroized" });
       }
       req.decodedToken = decodedToken;
       next();
     });
-  } else return res.json({ message: "Unauthorized" });
+  } else return res.status(400).json({ message: "Unauthorized" });
 };
 
 const logoutUser = (req, res) => {
@@ -81,9 +84,21 @@ const logoutUser = (req, res) => {
   });
 };
 
+const currentUser = async (req, res) => {
+  const userId = req.decodedToken.id;
+
+  console.log(userId);
+  const user = await User.findById(userId);
+
+  return res.status(200).json({
+    user,
+  });
+};
+
 module.exports = {
   registerUser,
   loginUser,
   protectedRoute,
   logoutUser,
+  currentUser,
 };

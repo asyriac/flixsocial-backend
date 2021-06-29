@@ -9,6 +9,8 @@ const userSchema = new mongoose.Schema({
   profilePic: {
     type: String,
   },
+  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
+  retweets: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
 });
 
 userSchema.pre("save", function (next) {
