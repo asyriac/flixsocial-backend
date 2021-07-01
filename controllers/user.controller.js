@@ -59,7 +59,7 @@ const loginUser = async (req, res) => {
       result: user,
     });
   }
-  return res.json({
+  return res.status(401).json({
     message: "Invalid username or password",
   });
 };

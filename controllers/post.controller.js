@@ -5,6 +5,7 @@ const { postValidationSchema } = require("../utils/validation");
 
 const createPost = async (req, res) => {
   try {
+    console.log(req.body);
     const { content } = req.body;
     const user = req.decodedToken.id;
 
@@ -52,7 +53,7 @@ const likePost = async (req, res) => {
   await Post.findByIdAndUpdate(postId, { [option]: { likes: user } });
   await User.findByIdAndUpdate(user, { [option]: { likes: postId } });
 
-  return res.json({ message: "Tweet liked." });
+  return res.json({ message: isLiked ? "Tweet unliked." : "Tweet liked." });
 };
 
 const retweetPost = async (req, res) => {

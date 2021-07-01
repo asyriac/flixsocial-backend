@@ -18,8 +18,8 @@ app.use(cookieParser());
 app.use(
   cors({
     credentials: true,
-    origin: ["https://vigilant-murdock-1d421d.netlify.app"],    
-	  optionsSuccessStatus: 200,
+    origin: ["http://localhost:3000"],
+    optionsSuccessStatus: 200,
   })
 );
 
