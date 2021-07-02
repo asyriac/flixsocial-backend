@@ -65,16 +65,22 @@ const loginUser = async (req, res) => {
 };
 
 const protectedRoute = (req, res, next) => {
+  console.log("Here");
+  console.log(req.get("origin"));
   const accessToken = req.cookies.accessToken;
   if (accessToken) {
     jwt.verify(accessToken, process.env.JWT_SECRET, (err, decodedToken) => {
       if (err) {
+        console.log("Her1e");
         return res.status(400).json({ message: "Unauthroized" });
       }
       req.decodedToken = decodedToken;
       next();
     });
-  } else return res.status(400).json({ message: "Unauthorized" });
+  } else {
+    console.log("Her2e");
+    return res.status(400).json({ message: "Unauthorized" });
+  }
 };
 
 const logoutUser = (req, res) => {

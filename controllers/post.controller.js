@@ -1,4 +1,5 @@
 const { string } = require("joi");
+const { find } = require("../models/post.model");
 const Post = require("../models/post.model");
 const User = require("../models/user.model");
 const { postValidationSchema } = require("../utils/validation");
@@ -9,10 +10,7 @@ const createPost = async (req, res) => {
     const { content } = req.body;
     const user = req.decodedToken.id;
 
-    const validationResult = postValidationSchema.validate(
-      { content },
-      { abortEarly: false }
-    );
+    const validationResult = postValidationSchema.validate({ content }, { abortEarly: false });
 
     if (validationResult.error !== undefined)
       return res.status(400).json({
@@ -32,10 +30,32 @@ const fetchPosts = async (req, res) => {
   try {
     const posts = await Post.find({})
       .populate("postedBy", "-password -likes")
+      .populate({ path: "replyTo", populate: { path: "postedBy" } })
       .populate({ path: "retweetData", populate: { path: "postedBy" } })
       .sort({ createdAt: -1 });
 
     return res.status(200).json({ posts });
+  } catch (err) {
+    return res.status(500).json({ error: err });
+  }
+};
+
+const fetchPost = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const post = await Post.findById(postId)
+      .populate("postedBy", "-password -likes")
+      .populate({ path: "replyTo", populate: { path: "postedBy" } })
+      .populate({ path: "retweetData", populate: { path: "postedBy" } });
+
+    let replyTo;
+    if (post.replyTo !== undefined) {
+      replyTo = post.replyTo;
+    }
+
+    const replies = await Post.find({ replyTo: postId }).populate("postedBy", "-password -likes");
+
+    return res.status(200).json({ post, replyTo, replies });
   } catch (err) {
     return res.status(500).json({ error: err });
   }
@@ -62,12 +82,9 @@ const retweetPost = async (req, res) => {
     const user = req.decodedToken.id;
 
     let retweetPost = await Post.findOneAndDelete({
-      postedBy: user.id,
+      postedBy: user,
       retweetData: postId,
     });
-
-    if (retweetPost)
-      return res.status(200).json({ message: "Reweet removed." });
 
     const option = retweetPost !== null ? "$pull" : "$addToSet";
 
@@ -79,7 +96,29 @@ const retweetPost = async (req, res) => {
     await User.findByIdAndUpdate(user, {
       [option]: { retweets: retweetPost._id },
     });
-    return res.status(200).json({ message: "Post retweeted." });
+    return res.status(200).json({ message: retweetPost ? "Post retweeted." : "Post removed." });
+  } catch (err) {
+    return res.status(500).json({ error: err });
+  }
+};
+
+const replyToPost = async (req, res) => {
+  try {
+    const { content } = req.body;
+    const user = req.decodedToken.id;
+    const postId = req.params.postId;
+
+    const validationResult = postValidationSchema.validate({ content }, { abortEarly: false });
+
+    if (validationResult.error !== undefined)
+      return res.status(400).json({
+        error: validationResult.error.details,
+      });
+
+    let post = await Post.create({ content, postedBy: user, replyTo: postId });
+    post = await post.populate("postedBy", "-password -likes").execPopulate();
+
+    return res.json({ post });
   } catch (err) {
     return res.status(500).json({ error: err });
   }
@@ -88,6 +127,8 @@ const retweetPost = async (req, res) => {
 module.exports = {
   createPost,
   fetchPosts,
+  fetchPost,
   likePost,
   retweetPost,
+  replyToPost,
 };
