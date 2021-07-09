@@ -28,7 +28,22 @@ const createPost = async (req, res) => {
 
 const fetchPosts = async (req, res) => {
   try {
-    const posts = await Post.find({})
+    const filter = req.query;
+    console.log(filter);
+    const user = req.decodedToken.id;
+    if (filter.followingOnly !== undefined) {
+      const followingOnly = filter.followingOnly === "true";
+      if (followingOnly) {
+        const userData = await User.findById(user);
+        const following = userData.following;
+        following.push(user);
+        filter.postedBy = { $in: following };
+      }
+      delete filter.followingOnly;
+    }
+
+    console.log(filter);
+    const posts = await Post.find(filter)
       .populate("postedBy", "-password -likes")
       .populate({ path: "replyTo", populate: { path: "postedBy" } })
       .populate({ path: "retweetData", populate: { path: "postedBy" } })
@@ -36,6 +51,7 @@ const fetchPosts = async (req, res) => {
 
     return res.status(200).json({ posts });
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ error: err });
   }
 };

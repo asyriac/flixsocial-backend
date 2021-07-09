@@ -11,6 +11,8 @@ const userSchema = new mongoose.Schema({
   },
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
   retweets: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
+  following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 });
 
 userSchema.pre("save", function (next) {

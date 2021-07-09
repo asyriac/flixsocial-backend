@@ -34,10 +34,12 @@ const registerUser = async (req, res) => {
     });
     result.password = undefined;
     setTokenToCookie(result.id, res);
+    console.log(result);
     return res.json({
       result,
     });
   } catch (err) {
+    console.log("Fail");
     return res.json({
       err,
     });
@@ -45,11 +47,9 @@ const registerUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-  console.log("Here");
   const { username, password } = req.body;
   console.log(username, password);
   const user = await User.findOne({ username });
-  console.log(user);
   const isAuthenticated = await compare(password, user.password);
   console.log(isAuthenticated);
   if (isAuthenticated) {
@@ -65,20 +65,16 @@ const loginUser = async (req, res) => {
 };
 
 const protectedRoute = (req, res, next) => {
-  console.log("Here");
-  console.log(req.get("origin"));
   const accessToken = req.cookies.accessToken;
   if (accessToken) {
     jwt.verify(accessToken, process.env.JWT_SECRET, (err, decodedToken) => {
       if (err) {
-        console.log("Her1e");
         return res.status(400).json({ message: "Unauthroized" });
       }
       req.decodedToken = decodedToken;
       next();
     });
   } else {
-    console.log("Her2e");
     return res.status(400).json({ message: "Unauthorized" });
   }
 };
@@ -101,10 +97,35 @@ const currentUser = async (req, res) => {
   });
 };
 
+const followUser = async (req, res) => {
+  const { userID } = req.params;
+  const myuserID = req.decodedToken.id;
+
+  const user = await User.findById(userID);
+
+  if (user === null) {
+    res.status(404).json({
+      message: "Invalid user",
+    });
+  }
+
+  const isFollowing = user?.followers?.includes(myuserID);
+  console.log(isFollowing);
+  const option = isFollowing ? "$pull" : "$addToSet";
+
+  await User.findByIdAndUpdate(myuserID, { [option]: { following: userID } });
+  await User.findByIdAndUpdate(userID, { [option]: { followers: myuserID } });
+
+  return res.status(201).json({
+    message: "success",
+  });
+};
+
 module.exports = {
   registerUser,
   loginUser,
   protectedRoute,
   logoutUser,
   currentUser,
+  followUser,
 };
