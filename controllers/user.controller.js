@@ -113,6 +113,9 @@ const followUser = async (req, res) => {
   console.log(isFollowing);
   const option = isFollowing ? "$pull" : "$addToSet";
 
+  console.log(myuserID, "Mine");
+  console.log(userID, "to follow");
+
   await User.findByIdAndUpdate(myuserID, { [option]: { following: userID } });
   await User.findByIdAndUpdate(userID, { [option]: { followers: myuserID } });
 

@@ -18,6 +18,9 @@ router.use("/profile", protectedRoute, profileRoutes);
 const userRoutes = require("./user.route");
 router.use("/users", protectedRoute, userRoutes);
 
+const searchRoutes = require("./search.route");
+router.use("/search", protectedRoute, searchRoutes);
+
 router.get("/hello", protectedRoute, (req, res) => {
   console.log(req.decodedToken.id);
   return res.json({ message: "Howdy" });

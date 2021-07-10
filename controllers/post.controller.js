@@ -29,7 +29,7 @@ const createPost = async (req, res) => {
 const fetchPosts = async (req, res) => {
   try {
     const filter = req.query;
-    console.log(filter);
+    // console.log(filter);
     const user = req.decodedToken.id;
     if (filter.followingOnly !== undefined) {
       const followingOnly = filter.followingOnly === "true";
@@ -42,7 +42,7 @@ const fetchPosts = async (req, res) => {
       delete filter.followingOnly;
     }
 
-    console.log(filter);
+    // console.log(filter);
     const posts = await Post.find(filter)
       .populate("postedBy", "-password -likes")
       .populate({ path: "replyTo", populate: { path: "postedBy" } })
