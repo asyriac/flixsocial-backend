@@ -76,7 +76,12 @@ const protectedRoute = (req, res, next) => {
 };
 
 const logoutUser = (req, res) => {
-  res.clearCookie("accessToken");
+  res.cookie("accessToken", "", {
+    httpOnly: true,
+    maxAge: maxAge * 1000,
+    sameSite: "none",
+    secure: true,
+  });
   return res.json({
     message: "Logged out successfully",
   });
