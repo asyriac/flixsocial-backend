@@ -34,12 +34,10 @@ const registerUser = async (req, res) => {
     });
     result.password = undefined;
     setTokenToCookie(result.id, res);
-    console.log(result);
     return res.json({
       result,
     });
   } catch (err) {
-    console.log("Fail");
     return res.json({
       err,
     });
@@ -48,10 +46,8 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
   const { username, password } = req.body;
-  console.log(username, password);
   const user = await User.findOne({ username });
   const isAuthenticated = await compare(password, user.password);
-  console.log(isAuthenticated);
   if (isAuthenticated) {
     setTokenToCookie(user.id, res);
     user.password = undefined;
@@ -88,8 +84,6 @@ const logoutUser = (req, res) => {
 
 const currentUser = async (req, res) => {
   const userId = req.decodedToken.id;
-
-  console.log(userId);
   const user = await User.findById(userId);
 
   return res.status(200).json({
@@ -110,11 +104,7 @@ const followUser = async (req, res) => {
   }
 
   const isFollowing = user?.followers?.includes(myuserID);
-  console.log(isFollowing);
   const option = isFollowing ? "$pull" : "$addToSet";
-
-  console.log(myuserID, "Mine");
-  console.log(userID, "to follow");
 
   await User.findByIdAndUpdate(myuserID, { [option]: { following: userID } });
   await User.findByIdAndUpdate(userID, { [option]: { followers: myuserID } });

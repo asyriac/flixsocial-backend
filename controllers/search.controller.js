@@ -21,7 +21,6 @@ const searchPost = async (req, res) => {
 
     return res.status(200).json({ posts });
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ error: err });
   }
 };
@@ -47,7 +46,6 @@ const searchUsers = async (req, res) => {
 
     return res.status(200).json({ users });
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ error: err });
   }
 };

@@ -6,7 +6,6 @@ const { postValidationSchema } = require("../utils/validation");
 
 const createPost = async (req, res) => {
   try {
-    console.log(req.body);
     const { content } = req.body;
     const user = req.decodedToken.id;
 
@@ -29,7 +28,6 @@ const createPost = async (req, res) => {
 const fetchPosts = async (req, res) => {
   try {
     const filter = req.query;
-    // console.log(filter);
     const user = req.decodedToken.id;
     if (filter.followingOnly !== undefined) {
       const followingOnly = filter.followingOnly === "true";
@@ -42,7 +40,7 @@ const fetchPosts = async (req, res) => {
       delete filter.followingOnly;
     }
 
-    // console.log(filter);
+   
     const posts = await Post.find(filter)
       .populate("postedBy", "-password -likes")
       .populate({ path: "replyTo", populate: { path: "postedBy" } })
@@ -51,7 +49,6 @@ const fetchPosts = async (req, res) => {
 
     return res.status(200).json({ posts });
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ error: err });
   }
 };
@@ -112,7 +109,12 @@ const retweetPost = async (req, res) => {
     await User.findByIdAndUpdate(user, {
       [option]: { retweets: retweetPost._id },
     });
-    return res.status(200).json({ message: retweetPost ? "Post retweeted." : "Post removed." });
+
+    retweetPost = await retweetPost
+      .populate("postedBy", "-password -likes")
+      .populate({ path: "retweetData", populate: { path: "postedBy" } })
+      .execPopulate();
+    return res.status(200).json({ status: option === "$addToSet" ? 1 : 0, message: retweetPost });
   } catch (err) {
     return res.status(500).json({ error: err });
   }
@@ -132,7 +134,10 @@ const replyToPost = async (req, res) => {
       });
 
     let post = await Post.create({ content, postedBy: user, replyTo: postId });
-    post = await post.populate("postedBy", "-password -likes").execPopulate();
+    post = await post
+      .populate("postedBy", "-password -likes")
+      .populate({ path: "replyTo", populate: { path: "postedBy" } })
+      .execPopulate();
 
     return res.json({ post });
   } catch (err) {
